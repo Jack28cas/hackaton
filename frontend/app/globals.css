@@ -58,6 +58,32 @@
   }
 }
 
+/* Estilos para Leaflet Routing Machine */
+.leaflet-routing-container {
+  display: none !important;
+}
+
+.leaflet-routing-container-hide {
+  display: none !important;
+}
+
+.route-line {
+  stroke: #3B82F6;
+  stroke-width: 4;
+  stroke-opacity: 0.8;
+  fill: none;
+}
+
+/* Mejorar la visualización de popups */
+.leaflet-popup-content-wrapper {
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.leaflet-popup-tip {
+  background: white;
+}
+
 /* Estilos para el mapa de Leaflet */
 .leaflet-container {
   height: 100%;

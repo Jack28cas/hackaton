@@ -8,7 +8,7 @@ import { Search, MapPin, ShoppingCart, User, Star, CheckCircle } from 'lucide-re
 import ModalPedido from '@/components/ModalPedido'
 
 // Importar el mapa dinámicamente para evitar errores de SSR
-const MapaVendedores = dynamic(() => import('@/components/MapaVendedores'), {
+const MapaVendedoresConRutas = dynamic(() => import('@/components/MapaVendedoresConRutas'), {
   ssr: false,
   loading: () => <div className="h-96 bg-gray-100 rounded-lg animate-pulse flex items-center justify-center">Cargando mapa...</div>
 })
@@ -39,7 +39,7 @@ export default function ClientePage() {
         id: '1',
         nombre: 'Don Carlos - Tacos',
         descripcion: 'Los mejores tacos de la ciudad',
-        ubicacion: [-34.6037, -58.3816],
+        ubicacion: [-31.426554, -64.191430],
         productos: ['Tacos al pastor', 'Tacos de carnitas', 'Quesadillas'],
         rating: 4.8,
         distancia: 0.2,
@@ -49,7 +49,7 @@ export default function ClientePage() {
         id: '2', 
         nombre: 'María - Empanadas',
         descripcion: 'Empanadas caseras recién hechas',
-        ubicacion: [-34.6047, -58.3826],
+        ubicacion: [-31.424554, -64.189430], // Ligeramente diferente para variedad
         productos: ['Empanadas de carne', 'Empanadas de pollo', 'Empanadas de queso'],
         rating: 4.6,
         distancia: 0.4,
@@ -59,7 +59,7 @@ export default function ClientePage() {
         id: '3',
         nombre: 'Jorge - Jugos Naturales',
         descripcion: 'Jugos frescos y batidos',
-        ubicacion: [-34.6027, -58.3806],
+        ubicacion: [-31.428554, -64.193430], // Otra variación cercana
         productos: ['Jugo de naranja', 'Batido de fresa', 'Agua de coco'],
         rating: 4.9,
         distancia: 0.1,
@@ -78,12 +78,13 @@ export default function ClientePage() {
         },
         (error) => {
           console.log('Error obteniendo ubicación:', error)
-          // Ubicación por defecto (Buenos Aires)
-          setUbicacionUsuario([-34.6037, -58.3816])
+          // Ubicación por defecto (Córdoba, Argentina - cerca de los vendedores)
+          setUbicacionUsuario([-31.4167, -64.1833])
         }
       )
     } else {
-      setUbicacionUsuario([-34.6037, -58.3816])
+      // Fallback si no hay geolocalización (Córdoba, Argentina)
+      setUbicacionUsuario([-31.4167, -64.1833])
     }
   }, [])
 
@@ -217,7 +218,7 @@ export default function ClientePage() {
               </CardHeader>
               <CardContent className="h-96">
                 {ubicacionUsuario && (
-                  <MapaVendedores 
+                  <MapaVendedoresConRutas 
                     vendedores={vendedores}
                     ubicacionUsuario={ubicacionUsuario}
                     onVendedorClick={setVendedorSeleccionado}
