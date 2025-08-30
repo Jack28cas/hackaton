@@ -1,0 +1,160 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CLIENTE
+  VENDEDOR
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDIENTE
+  ACEPTADO
+  PREPARANDO
+  LISTO
+  ENTREGADO
+  CANCELADO
+}
+
+enum PaymentMethod {
+  STABLECOIN
+  EFECTIVO
+}
+
+model User {
+  id          String    @id @default(cuid())
+  email       String    @unique
+  password    String
+  name        String
+  phone       String?
+  role        UserRole  @default(CLIENTE)
+  
+  // Ubicación
+  latitude    Float?
+  longitude   Float?
+  address     String?
+  
+  // Estado de conexión (para vendedores)
+  isConnected Boolean   @default(false)
+  lastSeen    DateTime?
+  
+  // Información adicional
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  lastLogin   DateTime?
+  
+  // Relaciones
+  products    Product[]
+  ordersAsClient  Order[] @relation("ClientOrders")
+  ordersAsVendor  Order[] @relation("VendorOrders")
+  sessions    Session[]
+  
+  @@map("users")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  price       Float
+  stock       Int      @default(0)
+  category    String?
+  imageUrl    String?
+  isAvailable Boolean  @default(true)
+  
+  // Relaciones
+  vendorId    String
+  vendor      User     @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  orderItems  OrderItem[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("products")
+}
+
+model Order {
+  id            String        @id @default(cuid())
+  status        OrderStatus   @default(PENDIENTE)
+  total         Float
+  paymentMethod PaymentMethod @default(EFECTIVO)
+  deliveryNotes String?
+  
+  // Información de pago con stablecoins (para integración futura con Meemaw)
+  walletAddress String?
+  transactionHash String?
+  blockchainNetwork String?
+  
+  // Relaciones
+  clientId      String
+  client        User          @relation("ClientOrders", fields: [clientId], references: [id])
+  vendorId      String
+  vendor        User          @relation("VendorOrders", fields: [vendorId], references: [id])
+  items         OrderItem[]
+  
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  quantity  Int
+  price     Float   // Precio al momento de la orden
+  
+  // Relaciones
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  
+  @@map("order_items")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  refreshToken String   @unique
+  expiresAt    DateTime
+  
+  // Relaciones
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt    DateTime @default(now())
+  
+  @@map("sessions")
+}
+
+// Modelo para almacenar configuraciones de la app
+model AppConfig {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("app_config")
+}
+
+// Modelo para notificaciones push (implementación futura)
+model NotificationToken {
+  id     String @id @default(cuid())
+  token  String @unique
+  userId String
+  
+  createdAt DateTime @default(now())
+  
+  @@map("notification_tokens")
+}

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test WebSocket</title>
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+</head>
+<body>
+    <h1>Test WebSocket VendedoresApp</h1>
+    <div id="status">Desconectado</div>
+    <button onclick="testConnection()">Probar Conexión</button>
+    <button onclick="testOrder()">Enviar Pedido de Prueba</button>
+    <div id="logs"></div>
+
+    <script>
+        let socket;
+        const statusEl = document.getElementById('status');
+        const logsEl = document.getElementById('logs');
+
+        function log(message) {
+            const div = document.createElement('div');
+            div.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            logsEl.appendChild(div);
+            console.log(message);
+        }
+
+        function testConnection() {
+            if (socket) {
+                socket.disconnect();
+            }
+
+            socket = io('http://localhost:3001', {
+                auth: {
+                    userType: 'VENDEDOR'
+                }
+            });
+
+            socket.on('connect', () => {
+                statusEl.textContent = 'Conectado ✅';
+                statusEl.style.color = 'green';
+                log('Socket conectado como VENDEDOR');
+            });
+
+            socket.on('disconnect', (reason) => {
+                statusEl.textContent = 'Desconectado ❌';
+                statusEl.style.color = 'red';
+                log('Socket desconectado: ' + reason);
+            });
+
+            socket.on('connect_error', (err) => {
+                statusEl.textContent = 'Error ❌';
+                statusEl.style.color = 'red';
+                log('Error de conexión: ' + err.message);
+            });
+
+            socket.on('order_received', (data) => {
+                log('📥 Pedido recibido: ' + JSON.stringify(data));
+            });
+        }
+
+        function testOrder() {
+            if (!socket || !socket.connected) {
+                log('❌ Socket no conectado');
+                return;
+            }
+
+            const orderData = {
+                id: Date.now().toString(),
+                vendorId: 'vendor-demo-1',
+                clientName: 'Cliente Test',
+                items: [
+                    {
+                        producto: { id: '1', nombre: 'Taco Test', precio: 25 },
+                        cantidad: 1
+                    }
+                ],
+                total: 25,
+                timestamp: new Date().toISOString()
+            };
+
+            log('📤 Enviando pedido de prueba...');
+            socket.emit('new_order', orderData);
+        }
+
+        // Auto-conectar al cargar
+        testConnection();
+    </script>
+</body>
+</html>
