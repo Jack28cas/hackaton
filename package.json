@@ -19,7 +19,17 @@
   "devDependencies": {
     "concurrently": "^8.2.2"
   },
-  "keywords": ["hackathon", "street-vendors", "real-time", "stablecoins", "meemaw"],
+  "keywords": [
+    "hackathon",
+    "street-vendors",
+    "real-time",
+    "stablecoins",
+    "meemaw"
+  ],
   "author": "Hackathon Team",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@farcaster/auth-kit": "^0.8.1",
+    "viem": "^2.36.0"
+  }
 }

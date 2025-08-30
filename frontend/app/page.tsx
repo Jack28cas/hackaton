@@ -27,18 +27,28 @@ export default function HomePage() {
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
               <span>En línea</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <Link href="/login">
-                <Button variant="ghost" size="sm">
-                  Iniciar Sesión
-                </Button>
-              </Link>
-              <Link href="/register">
-                <Button size="sm">
-                  Registrarse
-                </Button>
-              </Link>
-            </div>
+                      <div className="flex items-center space-x-2">
+            <Link href="/login">
+              <Button variant="ghost" size="sm">
+                Iniciar Sesión
+              </Button>
+            </Link>
+            <Link href="/register">
+              <Button size="sm">
+                Registrarse
+              </Button>
+            </Link>
+            <Link href="/wallet">
+              <Button variant="outline" size="sm">
+                Wallet
+              </Button>
+            </Link>
+            <Link href="/farcaster">
+              <Button variant="outline" size="sm">
+                Farcaster
+              </Button>
+            </Link>
+          </div>
           </div>
         </nav>
       </header>

@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import './theme.css'
 import { AuthProvider } from '@/contexts/AuthContext'
+import { OnchainProvider } from '@/contexts/OnchainProvider'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -29,11 +31,13 @@ export default function RootLayout({
         />
       </head>
       <body className={inter.className}>
-        <AuthProvider>
-          <div className="min-h-screen bg-background">
-            {children}
-          </div>
-        </AuthProvider>
+        <OnchainProvider>
+          <AuthProvider>
+            <div className="min-h-screen bg-background">
+              {children}
+            </div>
+          </AuthProvider>
+        </OnchainProvider>
       </body>
     </html>
   )

@@ -50,6 +50,7 @@ export default function MapaVendedoresConRutas({
 }: MapaVendedoresProps) {
   const [vendedorSeleccionado, setVendedorSeleccionado] = useState<Vendedor | null>(null)
   const [mostrarRuta, setMostrarRuta] = useState(false)
+  const [rutaCargando, setRutaCargando] = useState(false)
 
   // Iconos personalizados
   const iconoUsuario = new L.Icon({
@@ -96,14 +97,33 @@ export default function MapaVendedoresConRutas({
     }
   }
 
-  const handleMostrarRuta = (vendedor: Vendedor) => {
+  const handleMostrarRuta = async (vendedor: Vendedor) => {
+    if (rutaCargando) return // Evitar múltiples clicks rápidos
+    
+    setRutaCargando(true)
+    
+    // Si hay una ruta anterior, ocultarla primero
+    if (mostrarRuta) {
+      setMostrarRuta(false)
+      await new Promise(resolve => setTimeout(resolve, 300)) // Pequeño delay
+    }
+    
     setVendedorSeleccionado(vendedor)
     setMostrarRuta(true)
+    setRutaCargando(false)
   }
 
-  const handleOcultarRuta = () => {
+  const handleOcultarRuta = async () => {
+    if (rutaCargando) return
+    
+    setRutaCargando(true)
     setMostrarRuta(false)
-    setVendedorSeleccionado(null)
+    
+    // Delay antes de limpiar el vendedor seleccionado
+    setTimeout(() => {
+      setVendedorSeleccionado(null)
+      setRutaCargando(false)
+    }, 200)
   }
 
   return (
@@ -165,8 +185,9 @@ export default function MapaVendedoresConRutas({
                       size="sm" 
                       onClick={() => handleMostrarRuta(vendedor)}
                       className="text-xs h-6 px-2"
+                      disabled={rutaCargando}
                     >
-                      Ver Ruta
+                      {rutaCargando ? 'Cargando...' : 'Ver Ruta'}
                     </Button>
                   )}
                 </div>
@@ -199,8 +220,9 @@ export default function MapaVendedoresConRutas({
             variant="outline" 
             onClick={handleOcultarRuta}
             className="w-full"
+            disabled={rutaCargando}
           >
-            Ocultar Ruta
+            {rutaCargando ? 'Ocultando...' : 'Ocultar Ruta'}
           </Button>
         </div>
       )}
