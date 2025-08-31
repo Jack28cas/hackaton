@@ -45,11 +45,6 @@ export default function HomePage() {
                   Wallet
                 </Button>
               </Link>
-              <Link href="/farcaster">
-                <Button variant="outline" size="sm">
-                  Farcaster
-                </Button>
-              </Link>
             </div>
           </div>
 
