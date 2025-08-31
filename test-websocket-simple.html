@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test WebSocket Simple</title>
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; font-weight: bold; }
+        .connected { background: #d4edda; color: #155724; }
+        .disconnected { background: #f8d7da; color: #721c24; }
+        .error { background: #fff3cd; color: #856404; }
+        button { margin: 5px; padding: 10px 15px; cursor: pointer; }
+        .logs { background: #f8f9fa; padding: 10px; border-radius: 5px; max-height: 300px; overflow-y: auto; }
+        .log-item { margin: 3px 0; padding: 3px; }
+        .config { background: #e9ecef; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        input { margin: 5px; padding: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🔌 Test WebSocket Simple</h1>
+    
+    <div class="config">
+        <h3>⚙️ Configuración</h3>
+        <label>URL del servidor: <input type="text" id="serverUrl" value="http://localhost:3001" style="width: 200px;"></label><br>
+        <label>Tipo de usuario: 
+            <select id="userType">
+                <option value="CLIENTE">Cliente</option>
+                <option value="VENDEDOR">Vendedor</option>
+            </select>
+        </label>
+    </div>
+    
+    <div id="status" class="status disconnected">Estado: Desconectado</div>
+    
+    <button onclick="testConnection()">Probar Conexión</button>
+    <button onclick="disconnect()">Desconectar</button>
+    <button onclick="clearLogs()">Limpiar Logs</button>
+    <button onclick="testHealth()">Test Health Check</button>
+    
+    <div id="logs" class="logs"></div>
+
+    <script>
+        let socket;
+        const statusEl = document.getElementById('status');
+        const logsEl = document.getElementById('logs');
+        const serverUrlEl = document.getElementById('serverUrl');
+        const userTypeEl = document.getElementById('userType');
+
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = 'log-item';
+            div.style.borderLeft = type === 'error' ? '3px solid #dc3545' : 
+                                  type === 'success' ? '3px solid #28a745' : 
+                                  '3px solid #007bff';
+            div.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            logsEl.appendChild(div);
+            logsEl.scrollTop = logsEl.scrollHeight;
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        function updateStatus(text, type) {
+            statusEl.textContent = `Estado: ${text}`;
+            statusEl.className = `status ${type}`;
+        }
+
+        async function testHealth() {
+            const serverUrl = serverUrlEl.value;
+            log(`🏥 Probando health check en ${serverUrl}/health...`, 'info');
+            
+            try {
+                const response = await fetch(`${serverUrl}/health`);
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ Health check exitoso: ${JSON.stringify(data)}`, 'success');
+                } else {
+                    log(`❌ Health check falló: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Error en health check: ${error.message}`, 'error');
+            }
+        }
+
+        function testConnection() {
+            const serverUrl = serverUrlEl.value;
+            const userType = userTypeEl.value;
+            
+            log(`🔌 Intentando conectar a ${serverUrl} como ${userType}...`, 'info');
+            
+            if (socket) {
+                socket.disconnect();
+            }
+
+            try {
+                socket = io(serverUrl, {
+                    auth: {
+                        userType: userType,
+                        userId: userType === 'VENDEDOR' ? 'vendor-test-1' : 'client-test-1'
+                    },
+                    timeout: 10000,
+                    transports: ['websocket', 'polling'],
+                    forceNew: true
+                });
+
+                socket.on('connect', () => {
+                    updateStatus('Conectado ✅', 'connected');
+                    log('✅ WebSocket conectado exitosamente', 'success');
+                    log(`📡 Socket ID: ${socket.id}`, 'info');
+                    log(`👤 Usuario: ${userType}`, 'info');
+                });
+
+                socket.on('disconnect', (reason) => {
+                    updateStatus('Desconectado ❌', 'disconnected');
+                    log(`❌ WebSocket desconectado: ${reason}`, 'error');
+                });
+
+                socket.on('connect_error', (err) => {
+                    updateStatus('Error de conexión ❌', 'error');
+                    log(`❌ Error de conexión: ${err.message}`, 'error');
+                    log(`🔍 Tipo: ${err.type}`, 'error');
+                    log(`🔍 Descripción: ${err.description}`, 'error');
+                    
+                    // Intentar conectar solo con WebSocket si falla polling
+                    if (err.message.includes('poll') && socket.io.opts.transports.includes('polling')) {
+                        log('🔄 Intentando solo con WebSocket...', 'info');
+                        socket.io.opts.transports = ['websocket'];
+                    }
+                });
+
+                socket.on('error', (data) => {
+                    log(`❌ Error del servidor: ${data.message}`, 'error');
+                });
+
+                // Eventos específicos
+                socket.on('vendor_connected', (data) => {
+                    log(`🟢 Vendedor conectado: ${data.name}`, 'success');
+                });
+
+                socket.on('order_received', (data) => {
+                    log(`📥 Pedido recibido: ${JSON.stringify(data)}`, 'success');
+                });
+
+                // Timeout para detectar si no se conecta
+                setTimeout(() => {
+                    if (!socket.connected) {
+                        log('⏰ Timeout: No se pudo conectar en 10 segundos', 'error');
+                        updateStatus('Timeout ❌', 'error');
+                    }
+                }, 10000);
+
+            } catch (error) {
+                log(`❌ Error creando socket: ${error.message}`, 'error');
+                updateStatus('Error ❌', 'error');
+            }
+        }
+
+        function disconnect() {
+            if (socket) {
+                socket.disconnect();
+                log('🔌 Desconectando WebSocket...', 'info');
+            }
+        }
+
+        function clearLogs() {
+            logsEl.innerHTML = '';
+            log('📝 Logs limpiados', 'info');
+        }
+
+        // Auto-test al cargar
+        window.onload = () => {
+            log('🚀 Página cargada, listo para probar WebSocket', 'info');
+            log('💡 Primero prueba el Health Check para verificar que el servidor esté funcionando', 'info');
+        };
+    </script>
+</body>
+</html>

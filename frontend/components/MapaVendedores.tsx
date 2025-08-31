@@ -1,8 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
+import { useEffect, useRef, useState } from 'react'
 
 interface Vendedor {
   id: string
@@ -26,98 +24,106 @@ export default function MapaVendedores({
   ubicacionUsuario, 
   onVendedorClick 
 }: MapaVendedoresProps) {
-  const mapRef = useRef<L.Map | null>(null)
-  const mapContainerRef = useRef<HTMLDivElement>(null)
+  const mapRef = useRef<HTMLDivElement>(null)
+  const [isClient, setIsClient] = useState(false)
+  const [mapInstance, setMapInstance] = useState<any>(null)
 
   useEffect(() => {
-    if (!mapContainerRef.current) return
+    setIsClient(true)
+  }, [])
 
-    // Inicializar el mapa
-    mapRef.current = L.map(mapContainerRef.current).setView(ubicacionUsuario, 15)
+  useEffect(() => {
+    if (!isClient || !mapRef.current) return
 
-    // Agregar capa de OpenStreetMap
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
-    }).addTo(mapRef.current)
+    const initMap = async () => {
+      try {
+        const L = await import('leaflet')
 
-    // Crear iconos personalizados
-    const iconoUsuario = L.divIcon({
-      html: `<div class="w-4 h-4 bg-blue-600 rounded-full border-2 border-white shadow-lg"></div>`,
-      className: 'custom-marker',
-      iconSize: [16, 16],
-      iconAnchor: [8, 8]
-    })
+        // Limpiar el contenedor si ya hay un mapa
+        if (mapRef.current) {
+          mapRef.current.innerHTML = ''
+        }
 
-    const iconoVendedorConectado = L.divIcon({
-      html: `<div class="w-6 h-6 bg-green-500 rounded-full border-2 border-white shadow-lg flex items-center justify-center">
-        <div class="w-2 h-2 bg-white rounded-full"></div>
-      </div>`,
-      className: 'custom-marker',
-      iconSize: [24, 24],
-      iconAnchor: [12, 12]
-    })
+        // Crear el mapa
+        const map = L.map(mapRef.current!).setView(ubicacionUsuario, 13)
+        setMapInstance(map)
 
-    const iconoVendedorDesconectado = L.divIcon({
-      html: `<div class="w-6 h-6 bg-gray-400 rounded-full border-2 border-white shadow-lg flex items-center justify-center">
-        <div class="w-2 h-2 bg-white rounded-full"></div>
-      </div>`,
-      className: 'custom-marker',
-      iconSize: [24, 24],
-      iconAnchor: [12, 12]
-    })
+        // Agregar capa de tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors'
+        }).addTo(map)
 
-    // Agregar marcador del usuario
-    L.marker(ubicacionUsuario, { icon: iconoUsuario })
-      .addTo(mapRef.current)
-      .bindPopup('<b>Tu ubicación</b>')
+        // Marcador del usuario
+        L.marker(ubicacionUsuario)
+          .addTo(map)
+          .bindPopup('<b>Tu ubicación</b>')
 
-    // Agregar marcadores de vendedores
-    vendedores.forEach((vendedor) => {
-      const icono = vendedor.conectado ? iconoVendedorConectado : iconoVendedorDesconectado
-      
-      const marker = L.marker(vendedor.ubicacion, { icon: icono })
-        .addTo(mapRef.current!)
-        .bindPopup(`
-          <div class="p-2">
-            <h3 class="font-bold text-sm">${vendedor.nombre}</h3>
-            <p class="text-xs text-gray-600 mb-2">${vendedor.descripcion}</p>
-            <div class="flex items-center text-xs text-yellow-600 mb-1">
-              ⭐ ${vendedor.rating} • ${vendedor.distancia}km
+        // Marcadores de vendedores
+        vendedores.forEach((vendedor) => {
+          const marker = L.marker(vendedor.ubicacion)
+            .addTo(map)
+            .bindPopup(`
+              <div style="padding: 8px; min-width: 200px;">
+                <h3 style="font-weight: bold; margin: 0 0 4px 0;">${vendedor.nombre}</h3>
+                <p style="margin: 0 0 8px 0; color: #666; font-size: 12px;">${vendedor.descripcion}</p>
+                <div style="font-size: 12px; color: #f59e0b; margin-bottom: 4px;">
+                  ⭐ ${vendedor.rating} • ${vendedor.distancia}km
+                </div>
+                <div style="font-size: 12px; margin-bottom: 8px;">
+                  ${vendedor.productos.slice(0, 2).join(', ')}
+                  ${vendedor.productos.length > 2 ? ` +${vendedor.productos.length - 2} más` : ''}
+                </div>
+                <span style="font-size: 11px; padding: 2px 8px; border-radius: 12px; background: ${vendedor.conectado ? '#dcfce7' : '#f3f4f6'}; color: ${vendedor.conectado ? '#166534' : '#6b7280'};">
+                  ${vendedor.conectado ? 'Conectado' : 'Desconectado'}
+                </span>
+              </div>
+            `)
+
+          // Click handler
+          if (onVendedorClick) {
+            marker.on('click', () => onVendedorClick(vendedor))
+          }
+        })
+
+      } catch (error) {
+        console.error('Error al cargar el mapa:', error)
+        // Fallback: mostrar mensaje de error
+        if (mapRef.current) {
+          mapRef.current.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: center; height: 300px; background: #f3f4f6; border-radius: 8px;">
+              <div style="text-align: center; color: #6b7280;">
+                <div style="font-size: 24px; margin-bottom: 8px;">🗺️</div>
+                <div>Error al cargar el mapa</div>
+                <div style="font-size: 12px; margin-top: 4px;">Intenta recargar la página</div>
+              </div>
             </div>
-            <div class="text-xs">
-              ${vendedor.productos.slice(0, 2).join(', ')}
-              ${vendedor.productos.length > 2 ? ` +${vendedor.productos.length - 2} más` : ''}
-            </div>
-            <div class="mt-2">
-              <span class="text-xs px-2 py-1 rounded-full ${
-                vendedor.conectado 
-                  ? 'bg-green-100 text-green-800' 
-                  : 'bg-gray-100 text-gray-600'
-              }">
-                ${vendedor.conectado ? 'Conectado' : 'Desconectado'}
-              </span>
-            </div>
-          </div>
-        `)
-
-      // Agregar click handler
-      if (onVendedorClick) {
-        marker.on('click', () => onVendedorClick(vendedor))
-      }
-    })
-
-    // Cleanup al desmontar
-    return () => {
-      if (mapRef.current) {
-        mapRef.current.remove()
-        mapRef.current = null
+          `
+        }
       }
     }
-  }, [vendedores, ubicacionUsuario, onVendedorClick])
+
+    initMap()
+
+    // Cleanup function
+    return () => {
+      if (mapInstance) {
+        mapInstance.remove()
+        setMapInstance(null)
+      }
+    }
+  }, [isClient, vendedores, ubicacionUsuario, onVendedorClick])
+
+  if (!isClient) {
+    return (
+      <div className="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center">
+        <div className="text-gray-500">Cargando mapa...</div>
+      </div>
+    )
+  }
 
   return (
     <div 
-      ref={mapContainerRef} 
+      ref={mapRef} 
       className="w-full h-full rounded-lg overflow-hidden"
       style={{ minHeight: '300px' }}
     />

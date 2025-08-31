@@ -1,185 +1,140 @@
 'use client'
 
 import { useState } from 'react'
-import { WalletConnect, WalletInfo } from '@/components/WalletAuth'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { SafeWalletConnect, SafeWalletInfo } from '@/components/SafeWalletAuth'
 import Link from 'next/link'
-import { ArrowLeft, Wallet, Zap, Shield, Coins } from 'lucide-react'
+import { ArrowLeft, Wallet, Zap, Shield, Coins, ExternalLink } from 'lucide-react'
 import { useAccount } from 'wagmi'
-import {
-  Transaction,
-  TransactionButton,
-  TransactionToast,
-  TransactionToastAction,
-  TransactionToastIcon,
-  TransactionToastLabel,
-  TransactionStatus,
-  TransactionStatusAction,
-  TransactionStatusLabel,
-} from "@coinbase/onchainkit/transaction";
-import { useMemo } from 'react'
+import React from 'react'
 
 export default function WalletPage() {
   const { address, isConnected } = useAccount();
 
-  // Example transaction call - sending 0 ETH to self
-  const calls = useMemo(() => address
-    ? [
-        {
-          to: address,
-          data: "0x" as `0x${string}`,
-          value: BigInt(0),
-        },
-      ]
-    : [], [address]);
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-purple-800">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-purple-800 flex flex-col">
+      {/* Header - Mobile First */}
+      <div className="px-4 pt-6 pb-4">
+        <div className="flex items-center justify-between mb-6">
           <Link href="/" className="flex items-center text-white hover:text-blue-200 transition-colors">
-            <ArrowLeft className="h-5 w-5 mr-2" />
-            Volver al Inicio
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            <span className="text-sm">Volver al Inicio</span>
           </Link>
+        </div>
+        
+        <div className="text-center text-white mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold mb-2">Wallet Web3</h1>
+          <p className="text-sm md:text-base text-blue-200">Conecta tu wallet y gestiona tus transacciones</p>
+        </div>
+      </div>
+
+      {/* Main Content - Mobile First */}
+      <div className="flex-1 px-4 pb-6">
+        <div className="max-w-md mx-auto space-y-6">
           
-          <div className="text-white">
-            <h1 className="text-3xl font-bold mb-2">Wallet Web3</h1>
-            <p className="text-blue-200">Conecta tu wallet y gestiona tus transacciones</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Wallet Connection */}
-          <div className="space-y-6">
-            <WalletInfo />
-
-            {/* Features */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Zap className="h-5 w-5 text-yellow-500" />
-                  ¿Por qué conectar tu wallet?
-                </CardTitle>
-                <CardDescription>
-                  Beneficios de usar Web3 en VendedoresApp
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
+          {/* Wallet Status Card */}
+          <div className="bg-white/95 backdrop-blur-sm shadow-xl rounded-lg">
+            <div className="p-6">
+              {isConnected ? (
                 <div className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <Shield className="h-5 w-5 text-green-500 mt-1" />
+                  {/* Connection Status */}
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 bg-green-100 rounded-full">
+                      <Wallet className="h-5 w-5 text-green-600" />
+                    </div>
                     <div>
-                      <h4 className="font-semibold">Pagos Seguros</h4>
-                      <p className="text-sm text-gray-600">Transacciones directas sin intermediarios</p>
+                      <h3 className="text-lg font-semibold text-green-600">¡Wallet Conectada!</h3>
+                      <p className="text-sm text-gray-600">Tu wallet está conectada a Base</p>
                     </div>
                   </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <Coins className="h-5 w-5 text-blue-500 mt-1" />
-                    <div>
-                      <h4 className="font-semibold">Stablecoins</h4>
-                      <p className="text-sm text-gray-600">Pagos estables con USDC en Base</p>
+
+                  {/* Wallet Address */}
+                  <div className="p-3 bg-gray-50 rounded-lg">
+                    <p className="text-sm font-medium text-gray-700 mb-1">Dirección:</p>
+                    <p className="text-xs font-mono text-gray-600 break-all">
+                      {address || '0xd7Ebf3fC998e6A3140Fe6116980c10b71429dc0e'}
+                    </p>
+                  </div>
+
+                  {/* Connection State */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Estado:</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span className="text-sm text-green-600 font-medium">Conectada</span>
                     </div>
                   </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <Wallet className="h-5 w-5 text-purple-500 mt-1" />
-                    <div>
-                      <h4 className="font-semibold">Control Total</h4>
-                      <p className="text-sm text-gray-600">Tú controlas tus fondos completamente</p>
-                    </div>
-                  </div>
+
+                  {/* Details Button */}
+                  <button className="w-full mt-4 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center">
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Ver Detalles
+                  </button>
                 </div>
-              </CardContent>
-            </Card>
+              ) : (
+                <div className="text-center py-8">
+                  <Wallet className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Conecta tu Wallet</h3>
+                  <p className="text-sm text-gray-600 mb-4">Para acceder a funciones Web3</p>
+                  <SafeWalletConnect />
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Transaction Demo */}
-          <div className="space-y-6">
-            {isConnected && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Transacción de Prueba</CardTitle>
-                  <CardDescription>
-                    Envía una transacción de prueba en Base
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <p className="text-sm text-gray-600">
-                      Esta transacción enviará 0 ETH a tu propia dirección como demostración.
-                    </p>
-                    
-                    <Transaction
-                      calls={calls}
-                      onSuccess={(response) => {
-                        const hash = response.transactionReceipts[0].transactionHash;
-                        console.log(`✅ Transacción exitosa: ${hash}`);
-                      }}
-                      onError={(error) => {
-                        console.error("❌ Transacción fallida:", error);
-                      }}
-                    >
-                      <TransactionButton className="w-full bg-blue-600 hover:bg-blue-700 text-white" />
-                      <TransactionStatus>
-                        <TransactionStatusAction />
-                        <TransactionStatusLabel />
-                      </TransactionStatus>
-                      <TransactionToast>
-                        <TransactionToastIcon />
-                        <TransactionToastLabel />
-                        <TransactionToastAction />
-                      </TransactionToast>
-                    </Transaction>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Navigation */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Explorar la App</CardTitle>
-                <CardDescription>
-                  Descubre todas las funcionalidades
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-4">
-                  <Link href="/cliente">
-                    <Button variant="outline" className="w-full h-16 flex flex-col items-center justify-center">
-                      <span className="text-lg mb-1">🛒</span>
-                      <span className="text-sm">Cliente</span>
-                    </Button>
-                  </Link>
-                  
-                  <Link href="/vendedor">
-                    <Button variant="outline" className="w-full h-16 flex flex-col items-center justify-center">
-                      <span className="text-lg mb-1">🛍️</span>
-                      <span className="text-sm">Vendedor</span>
-                    </Button>
-                  </Link>
-                  
-                  <Link href="/farcaster">
-                    <Button variant="outline" className="w-full h-16 flex flex-col items-center justify-center">
-                      <span className="text-lg mb-1">🎭</span>
-                      <span className="text-sm">Farcaster</span>
-                    </Button>
-                  </Link>
-                  
-                  <Link href="/login">
-                    <Button variant="outline" className="w-full h-16 flex flex-col items-center justify-center">
-                      <span className="text-lg mb-1">🔐</span>
-                      <span className="text-sm">Login</span>
-                    </Button>
-                  </Link>
+          {/* Benefits Card */}
+          <div className="bg-white/95 backdrop-blur-sm shadow-xl rounded-lg">
+            <div className="p-6 pb-4">
+              <div className="flex items-center gap-2 text-lg font-semibold mb-2">
+                <Zap className="h-5 w-5 text-yellow-500" />
+                ¿Por qué conectar tu wallet?
+              </div>
+              <p className="text-sm text-gray-600 mb-4">
+                Beneficios de usar Web3 en HawkerChain
+              </p>
+            </div>
+            <div className="px-6 pb-6 space-y-4">
+              <div className="flex items-start gap-3">
+                <Shield className="h-5 w-5 text-green-500 mt-1 flex-shrink-0" />
+                <div>
+                  <h4 className="font-semibold text-gray-900">Pagos Seguros</h4>
+                  <p className="text-sm text-gray-600">Transacciones directas sin intermediarios</p>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+              
+              <div className="flex items-start gap-3">
+                <Coins className="h-5 w-5 text-blue-500 mt-1 flex-shrink-0" />
+                <div>
+                  <h4 className="font-semibold text-gray-900">Stablecoins</h4>
+                  <p className="text-sm text-gray-600">Pagos estables con USDC en Base</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="grid grid-cols-2 gap-3">
+            <Link href="/cliente">
+              <button className="w-full h-12 flex flex-col items-center justify-center bg-white/95 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                <span className="text-lg mb-1">🛒</span>
+                <span className="text-xs">Cliente</span>
+              </button>
+            </Link>
+            
+            <Link href="/vendedor">
+              <button className="w-full h-12 flex flex-col items-center justify-center bg-white/95 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                <span className="text-lg mb-1">🛍️</span>
+                <span className="text-xs">Vendedor</span>
+              </button>
+            </Link>
           </div>
         </div>
+      </div>
+
+      {/* Floating Profile Button */}
+      <div className="fixed bottom-6 right-6">
+        <button className="w-12 h-12 rounded-full bg-gray-800 hover:bg-gray-700 transition-colors flex items-center justify-center">
+          <span className="text-white font-semibold">N</span>
+        </button>
       </div>
     </div>
   )

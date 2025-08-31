@@ -3,7 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import './theme.css'
 import { AuthProvider } from '@/contexts/AuthContext'
-import { OnchainProvider } from '@/contexts/OnchainProvider'
+import { Providers } from '@/contexts/OnchainProvider'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -31,13 +31,14 @@ export default function RootLayout({
         />
       </head>
       <body className={inter.className}>
-        <OnchainProvider>
-          <AuthProvider>
-            <div className="min-h-screen bg-background">
-              {children}
-            </div>
-          </AuthProvider>
-        </OnchainProvider>
+        <AuthProvider>
+          <Providers> 
+          <div className="min-h-screen bg-background">
+            {children}
+          </div>
+          </Providers>
+         
+        </AuthProvider>
       </body>
     </html>
   )

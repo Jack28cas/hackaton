@@ -23,6 +23,10 @@ export const useSocket = (options: UseSocketOptions = {}) => {
       socketRef.current = io('http://localhost:3001', {
         transports: ['websocket', 'polling'],
         autoConnect: true,
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+        timeout: 20000,
         auth: {
           userType: userType,
           token: token,
@@ -39,6 +43,11 @@ export const useSocket = (options: UseSocketOptions = {}) => {
       socketRef.current.on('disconnect', (reason) => {
         console.log('🔌 Socket desconectado:', reason)
         setIsConnected(false)
+        
+        // Solo reconectar si no fue una desconexión manual
+        if (reason !== 'io client disconnect') {
+          console.log('🔄 Intentando reconectar automáticamente...')
+        }
       })
 
       socketRef.current.on('connect_error', (err) => {
@@ -49,10 +58,18 @@ export const useSocket = (options: UseSocketOptions = {}) => {
 
       socketRef.current.on('reconnect', (attemptNumber) => {
         console.log(`🔄 Reconectado después de ${attemptNumber} intentos`)
+        setIsConnected(true)
+        setError(null)
       })
 
       socketRef.current.on('reconnect_error', (err) => {
         console.error('❌ Error de reconexión:', err.message)
+        setError(err.message)
+      })
+
+      socketRef.current.on('reconnect_failed', () => {
+        console.error('❌ Falló la reconexión después de todos los intentos')
+        setError('No se pudo reconectar')
       })
 
     } catch (err) {
@@ -97,7 +114,11 @@ export const useSocket = (options: UseSocketOptions = {}) => {
     }
 
     return () => {
-      disconnect()
+      // Solo desconectar si el componente se desmonta completamente
+      if (socketRef.current) {
+        socketRef.current.disconnect()
+        socketRef.current = null
+      }
     }
   }, [autoConnect])
 

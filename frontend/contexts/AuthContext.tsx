@@ -15,6 +15,7 @@ interface AuthContextType {
   token: string | null
   login: (token: string, user: User) => void
   logout: () => void
+  clearAuth: () => void
   isAuthenticated: boolean
   isLoading: boolean
 }
@@ -65,6 +66,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
     localStorage.removeItem('token')
     localStorage.removeItem('user')
+    console.log('🚪 User logged out, localStorage cleared')
+  }
+
+  const clearAuth = () => {
+    setToken(null)
+    setUser(null)
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    console.log('🧹 Auth cleared manually')
   }
 
   const value = {
@@ -72,6 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     token,
     login,
     logout,
+    clearAuth,
     isAuthenticated: !!token && !!user,
     isLoading
   }

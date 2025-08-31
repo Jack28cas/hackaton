@@ -81,4 +81,4 @@ export function WalletInfo() {
   );
 }
 
-export default WalletAuth;
+

@@ -101,6 +101,25 @@
   }
 }
 
+/* Estilos para scroll personalizado */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 8px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
 .animate-pulse-soft {
   animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
@@ -126,4 +145,45 @@
   transform: translateX(100%);
   opacity: 0;
   transition: transform 300ms ease-in, opacity 300ms ease-in;
+}
+
+/* Leaflet custom icons */
+.custom-div-icon {
+  background: transparent;
+  border: none;
+}
+
+.custom-div-icon div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Estilos básicos para Leaflet */
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 8px;
+}
+
+.leaflet-popup-content {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.leaflet-popup-tip {
+  background: white;
+}
+
+.leaflet-popup-close-button {
+  color: #666;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.leaflet-popup-close-button:hover {
+  color: #333;
 }
